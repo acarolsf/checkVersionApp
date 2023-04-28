@@ -36,6 +36,8 @@ class CheckUpdate: NSObject {
 
     static let shared = CheckUpdate()
     var isTestFlight: Bool = false
+
+    private let appStoreId = "6446998023" // Id Example
     
     func showUpdate(withConfirmation: Bool, isTestFlight: Bool) {
         self.isTestFlight = isTestFlight
@@ -82,7 +84,12 @@ class CheckUpdate: NSObject {
     }
     
     private func getUrl(from identifier: String) -> String {
-        return isTestFlight ? "https://api.appstoreconnect.apple.com/v1/apps/\(identifier)/builds" : "http://itunes.apple.com/br/lookup?bundleId=\(identifier)"
+        // You should pay attention on the country that your app is located, in my case I put Brazil */br/*
+        // Você deve prestar atenção em que país o app está disponível, no meu caso eu coloquei Brasil */br/*
+        let testflightURL = "https://api.appstoreconnect.apple.com/v1/apps/\(self.appStoreId)/builds"
+        let appStoreURL = "http://itunes.apple.com/br/lookup?bundleId=\(identifier)"
+
+        return isTestFlight ? testflightURL : appStoreURL
     }
 
     private func getAppInfo(completion: @escaping (TestFlightInfo?, AppInfo?, Error?) -> Void) -> URLSessionDataTask? {
