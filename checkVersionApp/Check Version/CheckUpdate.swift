@@ -8,10 +8,12 @@
 import Foundation
 import UIKit
 
+// MARK: - Enum Errors
 enum VersionError: Error {
     case invalidBundleInfo, invalidResponse, dataError
 }
 
+// MARK: - Models
 struct LookupResult: Decodable {
     let data: [TestFlightInfo]?
     let results: [AppInfo]?
@@ -32,20 +34,27 @@ struct AppInfo: Decodable {
     let trackViewUrl: String
 }
 
+
+// MARK: - Check Update Class
 class CheckUpdate: NSObject {
 
+    // MARK: - Singleton
     static let shared = CheckUpdate()
+
+    // MARK: - TestFlight variable
     var isTestFlight: Bool = false
 
     private let appStoreId = "6446998023" // Id Example
     
-    func showUpdate(withConfirmation: Bool, isTestFlight: Bool) {
+    // MARK: - Show Update Function
+    func showUpdate(withConfirmation: Bool, isTestFlight: Bool = false) {
         self.isTestFlight = isTestFlight
         DispatchQueue.global().async {
             self.checkVersion(force : !withConfirmation)
         }
     }
 
+    // MARK: - Function to check version
     private  func checkVersion(force: Bool) {
         if let currentVersion = self.getBundle(key: "CFBundleShortVersionString") {
             _ = getAppInfo { (data, info, error) in
@@ -56,7 +65,8 @@ class CheckUpdate: NSObject {
                     print("error getting app \(store) version: ", error)
                 }
                 
-                if let appStoreAppVersion = info?.version {
+                if let appStoreAppVersion = info?.version { // Check app on AppStore
+                    // Check if the installed app is the same that is on AppStore, if it is, print on console, but if it isn't it shows an alert.
                     if appStoreAppVersion <= currentVersion {
                         print("Already on the last app version: ", currentVersion)
                     } else {
@@ -66,7 +76,8 @@ class CheckUpdate: NSObject {
                             topController.showAppUpdateAlert(version: appStoreAppVersion, force: force, appURL: (info?.trackViewUrl)!, isTestFlight: self.isTestFlight)
                         }
                     }
-                } else if let testFlightAppVersion = data?.attributes.version {
+                } else if let testFlightAppVersion = data?.attributes.version { // Check app on TestFlight
+                // Check if the installed app is the same that is on TestFlight, if it is, print on console, but if it isn't it shows an alert.
                     if testFlightAppVersion <= currentVersion {
                         print("Already on the last app version: ",currentVersion)
                     } else {
@@ -76,10 +87,12 @@ class CheckUpdate: NSObject {
                             topController.showAppUpdateAlert(version: testFlightAppVersion, force: force, appURL: (info?.trackViewUrl)!, isTestFlight: self.isTestFlight)
                         }
                     }
-                } else {
+                }  else { // App doesn't exist on store
                     print("App does not exist on \(store)")
                 }
             }
+        } else {
+            print("Erro to decode app current version")
         }
     }
     
@@ -93,10 +106,7 @@ class CheckUpdate: NSObject {
     }
 
     private func getAppInfo(completion: @escaping (TestFlightInfo?, AppInfo?, Error?) -> Void) -> URLSessionDataTask? {
-    
-      // You should pay attention on the country that your app is located, in my case I put Brazil */br/*
-      // Você deve prestar atenção em que país o app está disponível, no meu caso eu coloquei Brasil */br/*
-      
+
         guard let identifier = self.getBundle(key: "CFBundleIdentifier"),
               let url = URL(string: getUrl(from: identifier)) else {
                 DispatchQueue.main.async {
@@ -112,6 +122,7 @@ class CheckUpdate: NSObject {
         let authorization = "Bearer ***"
         
         var request = URLRequest(url: url)
+        request.httpMethod = "GET"
         
         // You just need to add an authorization header if you are checking TestFlight version
         // Você só precisa adicionar uma autorização no header se você está checando a versão de testflight
@@ -119,6 +130,8 @@ class CheckUpdate: NSObject {
             request.setValue(authorization, forHTTPHeaderField: "Authorization")
         }
         
+        // Make request
+        // Fazer a requisição
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             self.debug(request, nil, response, error, data)
                 do {
