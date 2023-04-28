@@ -37,7 +37,7 @@ class ViewController: UIViewController {
     }
 
     @objc func checkVersion() {
-        CheckUpdate.shared.showUpdate(withConfirmation: true, isTestFlight: false)
+        CheckUpdate.shared.showUpdate(withConfirmation: true, isTestFlight: true)
     }
 }
 
